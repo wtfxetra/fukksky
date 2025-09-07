@@ -55,6 +55,17 @@ setup_zram() {
     echo "Kernel reports: $(cat $ZRAM_SYS/disksize) bytes"
 }
 
+# Wait until system is booted and zram device exists
+while [ "$(getprop sys.boot_completed)" != "1" ] || [ ! -e /dev/block/zram0 ]; do
+    sleep 1
+done
+
+sleep 20
+
+
+# Now call the function
+setup_zram
+
 sysctl -w vm.swappiness=40
 sysctl -w vm.page-cluster=0
 
