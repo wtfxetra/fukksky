@@ -60,15 +60,16 @@ while [ "$(getprop sys.boot_completed)" != "1" ] || [ ! -e /dev/block/zram0 ]; d
     sleep 1
 done
 
+# Extra Time
 sleep 20
 
 
-# Now call the function
-setup_zram
-
+# Set Swappiness
 sysctl -w vm.swappiness=40
 sysctl -w vm.page-cluster=0
 
+# Setup ZRam
 setup_zram
 
+# Set Sheduler
 set_scheduler kyber
