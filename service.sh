@@ -55,6 +55,9 @@ setup_zram() {
     echo "Kernel reports: $(cat $ZRAM_SYS/disksize) bytes"
 }
 
+sysctl -w vm.swappiness=40
+sysctl -w vm.page-cluster=0
+
 setup_zram
 
 set_scheduler kyber
