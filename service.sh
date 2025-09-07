@@ -57,9 +57,4 @@ setup_zram() {
 
 setup_zram
 
-# Or with a custom size in MB:
-# setup_zram 2048
-
-
-
 set_scheduler kyber
