@@ -1,0 +1,14 @@
+wifi.supplicant_scan_interval=180
+persist.wifi_scan_interval=180
+ro.config.combined_signal=true
+ro.config.hw_new_wifitopdp=1
+ro.config.hw_fast_dormancy=1
+persist.telephony.support.ipv6=1
+persist.telephony.support.ipv4=1
+ro.telephony.call_ring.delay=0
+ring.delay=0
+ro.ril.enable.amr.wideband=1
+ro.config.vc_call_steps=20
+ro.config.dha_tunnable=1
+persist.cust.tel.eons=1
+ro.gsm.2nd_data_retry_config=max/_retries=1, 1000, 1000, 1000
