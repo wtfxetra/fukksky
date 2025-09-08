@@ -4,3 +4,4 @@ version=v1.0.0
 versionCode=100
 author=wtfxetra
 description=Fukk Sky
+updateJson=https://raw.githubusercontent.com/wtfxetra/fukksky/main/update.json
