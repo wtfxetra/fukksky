@@ -1,5 +1,5 @@
-wifi.supplicant_scan_interval=180
-persist.wifi_scan_interval=180
+wifi.supplicant_scan_interval=240
+persist.wifi_scan_interval=240
 ro.config.combined_signal=true
 ro.config.hw_new_wifitopdp=1
 ro.config.hw_fast_dormancy=1
