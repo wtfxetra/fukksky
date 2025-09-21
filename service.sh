@@ -35,40 +35,39 @@ xset_scheduler() {
 #ZRAM setup function
 
 setup_zram() {
-    local ZRAM_DEV=/dev/block/zram0
-    local ZRAM_SYS=/sys/block/zram0
+    # Use first argument as ZRAM device or default to zram0
+    ZRAM_DEV="/dev/block/${1:-zram0}"
+    ZRAM_SYS="/sys/block/${1:-zram0}"
+    
+    # Validate ZRAM device exists
+    [ ! -b "$ZRAM_DEV" ] && return 1
 
     # Detect RAM in MB
-    local RAM_MB=$(grep MemTotal /proc/meminfo | awk '{print int($2/1024)}')
+    RAM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+    [ -z "$RAM_MB" ] || [ "$RAM_MB" -le 0 ] && return 1
 
-    # ZRAM size = 50% of RAM by default (override with $1 if given)
-    local ZRAM_MB=$((RAM_MB / 2))
-    if [ -n "$1" ]; then
-        ZRAM_MB="$1"
-    fi
+    # ZRAM size = 50% of RAM by default (override with $2 if given)
+    ZRAM_MB=$((RAM_MB / 2))
+    [ -n "$2" ] && [ "$2" -gt 0 ] && ZRAM_MB="$2"
+    [ "$ZRAM_MB" -le 0 ] && return 1
 
-    # Turn off existing ZRAM
+    # Turn off existing ZRAM swap and reset
     swapoff "$ZRAM_DEV" 2>/dev/null
-    echo 1 > "$ZRAM_SYS/reset"
+    echo 1 > "$ZRAM_SYS/reset" 2>/dev/null
 
-    # Set compression
-    echo lz4 > "$ZRAM_SYS/comp_algorithm"
+    # Set compression algorithm (lz4 preferred, fallback to lzo)
+    grep "lz4" "$ZRAM_SYS/comp_algorithm" 2>/dev/null && echo "lz4" > "$ZRAM_SYS/comp_algorithm" 2>/dev/null || 
+    grep "lzo" "$ZRAM_SYS/comp_algorithm" 2>/dev/null && echo "lzo" > "$ZRAM_SYS/comp_algorithm" 2>/dev/null
 
-    # Apply new size (with M suffix, safer on Android kernels)
-    echo "${ZRAM_MB}M" > "$ZRAM_SYS/disksize"
+    # Apply new size
+    echo "${ZRAM_MB}M" > "$ZRAM_SYS/disksize" 2>/dev/null || return 1
 
     # Reinitialize swap
-    mkswap "$ZRAM_DEV"
-    swapon "$ZRAM_DEV" -p 32767
+    mkswap "$ZRAM_DEV" 2>/dev/null && swapon "$ZRAM_DEV" -p 32767 2>/dev/null
 
     # VM tweaks
-    sysctl -w vm.swappiness=40
-    sysctl -w vm.page-cluster=0
-
-    # Confirm
-    echo "ZRAM compression: $(cat $ZRAM_SYS/comp_algorithm)"
-    echo "Requested ZRAM size: ${ZRAM_MB} MB"
-    echo "Kernel reports: $(cat $ZRAM_SYS/disksize) bytes"
+    sysctl -w vm.swappiness=40 2>/dev/null
+    sysctl -w vm.page-cluster=0 2>/dev/null
 }
 
 # Wait until system is booted and zram device exists
