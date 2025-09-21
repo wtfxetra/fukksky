@@ -70,6 +70,20 @@ setup_zram() {
     sysctl -w vm.page-cluster=0 2>/dev/null
 }
 
+xset_iostat() {
+    [ $# -lt 2 ] && return 1
+    
+    enable="$1"
+    shift
+    
+    [ "$(id -u)" -ne 0 ] && return 1
+    
+    for device in "$@"; do
+        iostat_path="/sys/block/$device/queue/iostats"
+        [ -e "$iostat_path" ] && echo "$enable" > "$iostat_path" 2>/dev/null
+    done
+}
+
 # Wait until system is booted and zram device exists
 while [ "$(getprop sys.boot_completed)" != "1" ] || [ ! -e /dev/block/zram0 ]; do
     sleep 1
@@ -88,3 +102,6 @@ setup_zram
 
 # Set Sheduler
 xset_scheduler kyber sda sdb sdc sdd sde sdf mmcblk1
+
+# Disable IOStats
+xset_iostat 0 sda sdb sdc sde sdd sdf mmcblk1
