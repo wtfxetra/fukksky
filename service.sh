@@ -1,19 +1,35 @@
 #!/system/bin/sh
 
-set_scheduler() {
-    local scheduler="$1"
-
-    # Loop through all sd[a-f] devices
-    for disk in /sys/block/sd[a-f]; do
-        if [ -e "$disk/queue/scheduler" ]; then
-            echo "$scheduler" > "$disk/queue/scheduler"
+xset_scheduler() {
+    if [ $# -lt 2 ]; then
+        echo "Usage: xset_scheduler <scheduler> <device1> [device2] [device3] ..."
+        return 1
+    fi
+    
+    scheduler="$1"
+    shift
+    
+    # Check if running as root
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "This function must be run as root"
+        return 1
+    fi
+    
+    # iterate through arguments
+    for device in "$@"; do
+        scheduler_path="/sys/block/$device/queue/scheduler"
+        
+        if [ -e "$scheduler_path" ]; then
+            # Check if the requested scheduler is available
+            available_schedulers=$(cat "$scheduler_path")
+            case "$available_schedulers" in
+                *"$scheduler"*)
+                    # Set the scheduler
+                    echo "$scheduler" > "$scheduler_path"
+                    ;;
+            esac
         fi
     done
-
-    # Also set for mmcblk1 if it exists
-    if [ -e /sys/block/mmcblk1/queue/scheduler ]; then
-        echo "$scheduler" > "/sys/block/mmcblk1/queue/scheduler"
-    fi
 }
 
 #ZRAM setup function
@@ -72,4 +88,4 @@ sysctl -w vm.page-cluster=0
 setup_zram
 
 # Set Sheduler
-set_scheduler kyber
+xset_scheduler kyber sda sdb sdc sdd sde sdf mmcblk1
